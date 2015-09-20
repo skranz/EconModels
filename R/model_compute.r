@@ -16,7 +16,7 @@
 #
 
 
-examples.model.dependencies = function() {
+examples.simulate.model = function() {
   setwd("D:/libraries/EconModel/EconModels")
   init.ec()
   ec = get.ec()
@@ -30,16 +30,23 @@ examples.model.dependencies = function() {
   cdf = em$cdf
   icdf = em$icdf
   sim = simulate.model(em,init.scen = FALSE)
+
+  names(em$panes)
+
+  par(mfrow=c(1,2))
+  manipulate::manipulate(
+    {
+      plot.model.pane(em,pane.ind=1, main=row, sim.row=row)
+      plot.model.pane(em,pane.ind=2, main=row, sim.row=row)
+    },
+    row = manipulate::picker(as.list(1:NROW(sim)))
+  )
+
+  plot.model.pane(em, sim.row=5)
+
   writeClipboard(paste0(deparse1(em$sim.fun,collapse = "\n")))
 
   inner.sim.report(em)
-
-  em$sim.fun
-  View(sim[1:10,])
-  Rprof()
-summaryRprof(tmp)
-unlink(tmp)
-
 }
 
 simulate.model = function(em, scen.name = names(em$scenarios)[1], scen = em$scenarios[[scen.name]], init.scen=TRUE, compute.par=TRUE) {
