@@ -1,8 +1,8 @@
 
 examples.model = function() {
   setwd("D:/libraries/EconCurves/EconCurves")
-  init.ec()
-  ec = get.ec()
+  initEconModels()
+  EM = getEM()
   em = load.model("ThreeEq")
   em = load.model("ThreeEqFixedM")
   em = load.model("IS_LM_PC")
@@ -30,7 +30,7 @@ examples.model = function() {
 }
 
 
-load.model = function(modelId, file=paste0(modelId,".yaml"), dir=get.ec()$models.path, ec = get.ec()) {
+load.model = function(modelId, file=paste0(modelId,".yaml"), dir=getEM()$models.path) {
   restore.point("load.model")
 
   tt = load.struct(name="model",file = paste0(dir,"/",file),typeName = "model")

@@ -1,11 +1,11 @@
 #setwd("D:/libraries/EconCurves/EconCurves/app")
 
 library(EconCurves)
-init.ec()
-ec = get.ec()
+initEconModels()
+EM = getEM()
 load.collection("makro.yaml")
 
-app = shinyStoriesApp(ec = ec)
+app = shinyStoriesApp(EM = EM)
 app$verbose = FALSE
 app$is.running = TRUE
 

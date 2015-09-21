@@ -18,8 +18,8 @@
 
 examples.simulate.model = function() {
   setwd("D:/libraries/EconModel/EconModels")
-  init.ec()
-  ec = get.ec()
+  initEconModels()
+  EM = getEM()
   em = load.model("Ger3Eq")
   em = load.model("SimpleLabor3Eq")
   check.model(em)

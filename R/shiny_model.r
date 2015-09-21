@@ -1,29 +1,29 @@
 examples.shiny.model = function() {
   set.restore.point.options(display.restore.point = TRUE)
-  
-  
+
+
   # Model builder
-  ec = init.ec()
+  initEconModels()
   em = load.model("ThreeEq")
-  
+
   init.model(em)
-  
+
   options(warn = 1)
   res = testwise.init.model(em)
   df = res$df
   vals = em$init.vals
-  
+
   res1 = testwise.sim.model(em, vals)
   df1 = res1$df
   vals1 = res1$vals
-  
+
   sim = simulate.model(em)
-  
-  ec = init.ec()
+
+  initEconModels()
   mb = init.mb("ThreeEq")
   app = eventsApp()
   app$mb = mb
-  
+
   model.ui = model.yaml.ui()
   init.ui = model.init.ui()
   tabPanels = list(
@@ -34,13 +34,13 @@ examples.shiny.model = function() {
   tabsetUI = fluidPage(
     do.call(tabsetPanel,c(tabPanels,id="modelTabset"))
   )
-  
+
   app$ui = shinyUI(tabsetUI)
-  
+
   runEventsApp(app, launch.browser = rstudio::viewer)
-  
+
   ui
-  
+
   navbarUi = navbarPage(
     title="Model Builder",
     position = "fixed-top",
@@ -50,13 +50,13 @@ examples.shiny.model = function() {
 
 }
 
-init.mb = function(modelId, file=paste0(modelId,".yaml"), dir=get.ec()$models.path, ec = get.ec()) {
+init.mb = function(modelId, file=paste0(modelId,".yaml"), dir=getEM()$models.path) {
   restore.point("init.mb")
-  
-  
+
+
   long.file = paste0(dir,"/",file)
   file.exists = file.exists(long.file)
-  
+
   if (file.exists) {
     yaml = readLines(long.file,warn = FALSE)
     em = try(load.model(modelId))
@@ -80,12 +80,12 @@ init.mb = function(modelId, file=paste0(modelId,".yaml"), dir=get.ec()$models.pa
     yaml = yaml
   ))
   mb
-  
+
 }
 
 model.init.ui =  function(app=getApp(), mb=app$mb ,...) {
   restore.point("model.init.ui")
-  
+
   ui = list(
     actionButton("modelInitRunBtn","Init"),
     uiOutput("modelInitConsole"),
@@ -94,11 +94,11 @@ model.init.ui =  function(app=getApp(), mb=app$mb ,...) {
   #aceHotkeyHandler("modelInitRunKey", click.model.init.run)
   buttonHandler("modelInitRunBtn", click.model.init.run)
   ui
-}  
+}
 
 show.model.msg = function(..., form="init", app=getApp()) {
   txt = paste0(..., collapse="\n")
-  
+
   if (form=="init") {
     html = p(txt)
     setUI("modelInitConsole", html)
@@ -107,7 +107,7 @@ show.model.msg = function(..., form="init", app=getApp()) {
 
 click.model.init.run = function(app=getApp(), mb=app$mb,...) {
   restore.point("click.model.init.run")
-  updateTabsetPanel(app$session, "modelTabset", selected = "initPanel") 
+  updateTabsetPanel(app$session, "modelTabset", selected = "initPanel")
 
   em = mb$em
   if (is.null(em)) {
@@ -116,14 +116,14 @@ click.model.init.run = function(app=getApp(), mb=app$mb,...) {
   }
   res = testwise.init.model(em)
   df = res$df
-  
-  
-  
+
+
+
   df.html = HTML(hwrite(df[,c("step","finite.vals","na.vals","num.warn","num.err","changed.vals")]))
-  
+
   has.err = df$err.warn.txt != "" | df$vals.txt != ""
   all.err = sc("<h5>",df$step[has.err],"</h5>\n ",df$err.warn.txt[has.err], "\n", df$vals.txt[has.err], collapse="\n<hr>")
-  
+
   clu.df = res$li[[length(res$li)]]$clu.df
   val.df = clu.df[,c("var","val")]
 
@@ -132,7 +132,7 @@ click.model.init.run = function(app=getApp(), mb=app$mb,...) {
     h5("Error and Warnings:"),HTML(all.err),
     HTML(hwrite(val.df))
   )
-  
+
   steps.panels = lapply(which(df$has.clu.df), function(row) {
     name = df$step[row]
     clu.df = res$li[[row]]$clu.df
@@ -143,7 +143,7 @@ click.model.init.run = function(app=getApp(), mb=app$mb,...) {
     } else {
       err.ui = wellPanel(p(txt))
     }
-    
+
     do.call(tabPanel,c(list(title=name,err.ui),clu.ui))
   })
 
@@ -155,7 +155,7 @@ click.model.init.run = function(app=getApp(), mb=app$mb,...) {
 
 model.yaml.ui = function(app=getApp(), mb=app$mb ,...) {
   restore.point("model.yaml.ui")
-  
+
   ui = list(
     aceEditor("modelYamlAce",value = mb$yaml, mode="yaml",
       showLineNumbers = FALSE,debounce = 0,
@@ -176,8 +176,8 @@ model.yaml.ui = function(app=getApp(), mb=app$mb ,...) {
 
 set.init.tabset = function(app=getApp(),...) {
   restore.point("set.init.tabset")
-  
-  updateTabsetPanel(app$session, "modelTabset", selected = "initPanel") 
+
+  updateTabsetPanel(app$session, "modelTabset", selected = "initPanel")
   click.model.init()
 }
 
@@ -197,17 +197,17 @@ withErrWarn <- function(expr, quoted=NULL, env = parent.frame()) {
     eHandler <- function(w) {
         myErrors <<- c(myErrors, list(w))
     }
-    
+
     val <- try(withCallingHandlers(eval(expr,env), warning = wHandler, error=eHandler))
     list(value = val, warnings = myWarnings, errors=myErrors,ok=is.null(myWarnings) & is.null(myErrors))
-} 
+}
 
 
 testwise.init.model = function(em) {
   restore.point("testwise.init.model")
-  
+
   log.li = list()
-  
+
   log = function(expr) {
     env = parent.frame()
     quoted = substitute(expr)
@@ -218,14 +218,14 @@ testwise.init.model = function(em) {
     log.li[[step]] <<- res[-1]
     invisible(res$value)
   }
-  
+
   clu.df <- NULL
   step = "init.model"
-  log(init.model(em,skip.cluster.equations = TRUE)) 
+  log(init.model(em,skip.cluster.equations = TRUE))
 
   step = "init.scen"
   log(init.model.scen(em, skip.cluster.init = TRUE))
-  
+
   step = "make.init.eqs.and.exo"
   log(make.init.eqs.and.exo(em))
 
@@ -237,16 +237,16 @@ testwise.init.model = function(em) {
 
   step = "eat.calls"
   log(clu.df <- eat.from.cluster(clu.df, cluster=1))
-  
+
   step = "vals.eat.calls"
   log(clu.df$val <- eval.cluster.df(clu.df, exo=em$init.exo))
-  
+
   step = "solve.single.symbolic"
   log(clu.df <- solve.symbolic.cluster.df(clu.df,skip.big = TRUE))
 
   step = "vals.solve.single.symbolic"
   log(clu.df$val <- eval.cluster.df(clu.df, exo=em$init.exo))
-  
+
   step = "solve.system.symbolic"
   log(clu.df <- solve.symbolic.cluster.df(clu.df,skip.big = FALSE))
 
@@ -254,7 +254,7 @@ testwise.init.model = function(em) {
   log(clu.df$val <- eval.cluster.df(clu.df, exo=em$init.exo))
 
 
-  # combine logs to a data.frame  
+  # combine logs to a data.frame
   li = lapply(seq_along(log.li), function(ind) {
     el = log.li[[ind]]
     txt = sc(seq_along(el$warnings), ". warning: ", sapply(el$warnings, as.character),collapse="\n\n")
@@ -264,15 +264,15 @@ testwise.init.model = function(em) {
     list(ind = ind,step=el$step, ok=el$ok, num.warn=length(el$warnings), num.err = length(el$errors), err.warn.txt = txt, has.clu.df=!is.null(el$clu.df))
   })
   li.df = rbindlist(li)
-  
+
   #tdf = log.li[["vals.eat.calls"]]$clu.df
-  
+
   # Adapt for value computation
   li.df$compute.vals = FALSE
   li.df$na.vals = li.df$finite.vals = NA_integer_
   li.df$vals.txt = ""
   li.df$changed.vals = ""
-  
+
   vals.rows = which(str.starts.with(li.df$step,"vals"))
   if (length(vals.rows)>0) {
     for (row in vals.rows) {
@@ -286,32 +286,32 @@ testwise.init.model = function(em) {
     li.df = li.df[-vals.rows,]
     log.li = log.li[-vals.rows]
   }
-  
+
   # log changes in values between steps
   rows = which(li.df$has.clu.df)
   for (i in seq_along(rows)[-1]) {
     pclu.df = log.li[[rows[i-1]]]$clu.df
     clu.df = log.li[[rows[i]]]$clu.df
-    
+
     pvals = pclu.df$val
     names(pvals) = pclu.df$var
 
     vals = clu.df$val
     names(vals) = clu.df$var
     vals = vals[names(pvals)]
-    
+
     changed = abs(vals-pvals) > 1e-7
     changed[is.na(pvals)] = FALSE
     changed[is.na(changed)] = TRUE
-    
+
     changed.var = paste0(names(changed)[changed],collapse=",")
     li.df$changed.vals[rows[i]] = changed.var
   }
-  
+
   vals = clu.df$val
   names(vals) = clu.df$var
   exo.vals=unlist(em$init.exo)
-  
+
   em$init.vals = c(vals, exo.vals)
   list(df=li.df, li=log.li,vals=vals, exo.vals=exo.vals)
 }
@@ -319,22 +319,22 @@ testwise.init.model = function(em) {
 # Simulate t=2
 testwise.sim.model = function(em, init.vals = em$init.vals) {
   restore.point("testwise.sim.model")
-  
+
   log.li = list()
-  
+
   # Note: Does not yet work for variable indices
   cols = names(init.vals)
   lag.inds  = str.starts.with(cols, "lag_")
   lead.inds =  str.starts.with(cols, "lead_")
-  is.var = cols %in% em$var.names  
+  is.var = cols %in% em$var.names
   exo.names = cols
   exo.names[lead.inds] = str.right.of(cols[lead.inds],"lead_")
   exo.names[is.var] = paste0("lag_", exo.names[is.var])
-  
-  exo.vals = init.vals[!lag.inds]
-  names(exo.vals) = exo.names[!lag.inds] 
 
-  
+  exo.vals = init.vals[!lag.inds]
+  names(exo.vals) = exo.names[!lag.inds]
+
+
   log = function(expr) {
     env = parent.frame()
     quoted = substitute(expr)
@@ -345,7 +345,7 @@ testwise.sim.model = function(em, init.vals = em$init.vals) {
     log.li[[step]] <<- res[-1]
     invisible(res$value)
   }
-  
+
   clu.df <- NULL
 
   step = "cluster.equations"
@@ -356,16 +356,16 @@ testwise.sim.model = function(em, init.vals = em$init.vals) {
 
   step = "eat.calls"
   log(clu.df <- eat.from.cluster(clu.df, cluster=1))
-  
+
   step = "vals.eat.calls"
   log(clu.df$val <- eval.cluster.df(clu.df, exo=exo.vals))
-  
+
   step = "solve.single.symbolic"
   log(clu.df <- solve.symbolic.cluster.df(clu.df,skip.big = TRUE))
 
   step = "vals.solve.single.symbolic"
   log(clu.df$val <- eval.cluster.df(clu.df, exo=exo.vals))
-  
+
   step = "solve.system.symbolic"
   log(clu.df <- solve.symbolic.cluster.df(clu.df,skip.big = FALSE))
 
@@ -373,7 +373,7 @@ testwise.sim.model = function(em, init.vals = em$init.vals) {
   log(clu.df$val <- eval.cluster.df(clu.df, exo=exo.vals))
 
 
-  # combine logs to a data.frame  
+  # combine logs to a data.frame
   li = lapply(seq_along(log.li), function(ind) {
     el = log.li[[ind]]
     txt = sc(seq_along(el$warnings), ". warning: ", sapply(el$warnings, as.character),collapse="\n\n")
@@ -383,15 +383,15 @@ testwise.sim.model = function(em, init.vals = em$init.vals) {
     list(ind = ind,step=el$step, ok=el$ok, num.warn=length(el$warnings), num.err = length(el$errors), err.warn.txt = txt, has.clu.df=!is.null(el$clu.df))
   })
   li.df = rbindlist(li)
-  
+
   #tdf = log.li[["vals.eat.calls"]]$clu.df
-  
+
   # Adapt for value computation
   li.df$compute.vals = FALSE
   li.df$na.vals = li.df$finite.vals = NA_integer_
   li.df$vals.txt = ""
   li.df$changed.vals = ""
-  
+
   vals.rows = which(str.starts.with(li.df$step,"vals"))
   if (length(vals.rows)>0) {
     for (row in vals.rows) {
@@ -405,33 +405,33 @@ testwise.sim.model = function(em, init.vals = em$init.vals) {
     li.df = li.df[-vals.rows,]
     log.li = log.li[-vals.rows]
   }
-  
+
   # log changes in values between steps
   rows = which(li.df$has.clu.df)
   for (i in seq_along(rows)[-1]) {
     pclu.df = log.li[[rows[i-1]]]$clu.df
     clu.df = log.li[[rows[i]]]$clu.df
-    
+
     pvals = pclu.df$val
     names(pvals) = pclu.df$var
 
     vals = clu.df$val
     names(vals) = clu.df$var
     vals = vals[names(pvals)]
-    
+
     changed = abs(vals-pvals) > 1e-7
     changed[is.na(pvals)] = FALSE
     changed[is.na(changed)] = TRUE
-    
+
     changed.var = paste0(names(changed)[changed],collapse=",")
     li.df$changed.vals[rows[i]] = changed.var
   }
-  
+
   list(df=li.df, li=log.li)
-  
+
   vals = clu.df$val
   names(vals) = clu.df$var
-  
+
   list(df=li.df, li=log.li,vals=vals, exo.vals=exo.vals)
 
 }
@@ -439,27 +439,27 @@ testwise.sim.model = function(em, init.vals = em$init.vals) {
 
 click.model.save.update = function(app=getApp(), mb=app$mb,...) {
 
-  new.yaml =paste0(getInputValue("modelYamlAce"), collapse="\n") 
+  new.yaml =paste0(getInputValue("modelYamlAce"), collapse="\n")
   restore.point("click.model.save.update")
-  
-  
+
+
   # Create a backup
   backup.file = paste0(mb$modelId,".bak")
   writeLines(mb$yaml, paste0(mb$dir,"/", backup.file))
-  
+
   # Save yaml
   mb$yaml = new.yaml
   writeLines(mb$yaml, mb$long.file)
-  
+
   # Try to load.yaml
   em = try(load.model(mb$modelId))
   if (is(em,"try-error")) {
     em = NULL
-    cat("\nSaved but error when parsing.")  
+    cat("\nSaved but error when parsing.")
   } else {
-    cat("\nSaved and successfully updated.")  
+    cat("\nSaved and successfully updated.")
   }
-  mb$em = em  
-  
+  mb$em = em
+
 }
 

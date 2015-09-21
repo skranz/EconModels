@@ -11,31 +11,31 @@ examples.shiny.stories = function() {
       #if (!is.null(env$em$T) & length(env$em$T)==0) {
       #  stop("length(em$T) ==0")
       #}
-      
+
     }
   })
 
   setwd("D:/libraries/EconCurves/EconCurves")
   #setwd("~/libraries/EconCurves")
-  init.ec()
-  ec = get.ec()
+  initEconModels()
+  EM = getEM()
   load.collection("makro.yaml")
   load.collection("hotelling.yaml")
 
-  app = shinyStoriesApp(ec = ec)
-  
-  
+  app = shinyStoriesApp(EM = EM)
+
+
   #coll.run.story.btn(storyId = "GreenParadoxQuiz")
-  
+
   runEventsApp(app,launch.browser = rstudio::viewer)
   runEventsApp(app,launch.browser = TRUE)
 
 }
 
-load.collection = function(file, dir = paste0(ec$main.path,"/collections"), stories.dir = ec$stories.path, models.dir = ec$models.path, ec=get.ec()) {
+load.collection = function(file, dir = paste0(ec$main.path,"/collections"), stories.dir = ec$stories.path, models.dir = ec$models.path, ec=getEM()) {
   restore.point("load.collection")
   ec$collection = coll = read.yaml(paste0(dir,"/",file))
-  
+
   story.names = names(coll$stories)
   stories = lapply(story.names, function(id) {
     load.story(storyId = id,dir = stories.dir)
@@ -50,40 +50,40 @@ load.collection = function(file, dir = paste0(ec$main.path,"/collections"), stor
 
   ec$models = models
   ec$stories = stories
- 
-     
+
+
   invisible(ec)
 }
 
-shinyStoriesApp = function(ec = get.ec(),title = "Stories from simple economic models", can.change.code = FALSE, ...) {
+shinyStoriesApp = function(EM = getEM(),title = "Stories from simple economic models", can.change.code = FALSE, ...) {
   restore.point("shinyStoriesApp")
-  
-  library(shinyEvents)  
+
+  library(shinyEvents)
   library(shinyAce)
   library(shinyBS)
-  
+
   app = eventsApp()
-  app$ec = ec
-  app$can.change.code = can.change.code 
-  
+  app$..EM = EM
+  app$can.change.code = can.change.code
+
   ui = fluidPage(title = title,uiOutput("storiesBaseUI"))
 
   appInitHandler(initHandler = function(app,...) {
     restore.point("app.initHandler")
     # copy ec for a new app instance
-    nec = as.environment(as.list(ec))
+    nEM = as.environment(as.list(EM))
     #nec$stories = lapply(nec$stories, function(es) {
     #  as.environment(as.list(es))
     #})
     #nec$models = lapply(nec$models, function(em) {
     #  as.environment(as.list(em))
     #})
-    app$ec = nec
-    
+    app$..EM = nEM
+
   }, app=app)
-  
+
   app$ui = ui
-  
+
   ec$choose.ui = stories.choose.ui()
   setUI("storiesBaseUI",ec$choose.ui)
   app
@@ -103,24 +103,24 @@ stories.choose.ui = function(app=getApp(), ec=app$ec,...) {
     runBtnId = paste0(es$storyId,"_CollRunBtn")
     showStoryBtnId = paste0(es$storyId,"_CollShowStoryBtn")
     showModelBtnId = paste0(es$modelId,"_CollShowModelBtn")
-    
+
     ui = bsCollapsePanel(title = title, value = paste0(es$storyId,"_CollectionPanel"),
       actionButton(runBtnId, label = "Run"),
       actionButton(showModelBtnId, label = "Show Model File"),
       actionButton(showStoryBtnId, label = "Show Story File"),
       HTML(descr)
     )
-    
+
     buttonHandler(runBtnId,if.handler.exists = "skip",fun = coll.run.story.btn, storyId = es$storyId)
-    
+
     buttonHandler(showStoryBtnId,if.handler.exists = "skip",fun = coll.show.story.btn, storyId = es$storyId)
-    
+
     buttonHandler(showModelBtnId,if.handler.exists = "skip",fun = coll.show.model.btn, modelId = es$modelId)
 
     ui
   })
   names(cp) = NULL
-  
+
   foots = lapply(coll$footnotes, function(ft) {
     title = ft$title
     Encoding(title) = "UTF-8"
@@ -132,10 +132,10 @@ stories.choose.ui = function(app=getApp(), ec=app$ec,...) {
     ui
   })
   names(foots) = NULL
-  
+
   panel.ui = do.call("bsCollapse",c(list(id="collStoriesCollapse"), cp, foots))
-  
-  title.html = coll$title 
+
+  title.html = coll$title
   if (!is.null(title.html)) {
     Encoding(title.html) = "UTF-8"
     title.html = h3(title.html)
@@ -151,7 +151,7 @@ coll.run.story.btn = function(app=getApp(), ec=app$ec, storyId,...) {
   app$es = as.environment(as.list(ec$stories[[storyId]]))
   modelId = app$es$modelId
 
-  app$em = as.environment(as.list(ec$models[[modelId]]))  
+  app$em = as.environment(as.list(ec$models[[modelId]]))
   app$es$em = app$em
 
   init.story(es = app$es, em=app$em)
@@ -166,13 +166,13 @@ coll.run.story.btn = function(app=getApp(), ec=app$ec, storyId,...) {
 coll.show.story.btn = function(app=getApp(), ec=app$ec, storyId,...) {
   restore.point("coll.show.story.btn")
   es = ec$stories[[storyId]]
-  
+
   setBtn = NULL
-  
+
   if (app$can.change.code) {
     setBtn = actionButton("showStorySetBtn","Apply changes")
   }
-  
+
   ui = list(
     aceEditor("storyYamlAce",value = es$yaml, mode="yaml"),
     bsAlert("showStoryAlert"),
@@ -180,7 +180,7 @@ coll.show.story.btn = function(app=getApp(), ec=app$ec, storyId,...) {
     actionButton("showStoryExitBtn","Exit")
   )
   buttonHandler("showStoryExitBtn", exit.to.main)
-  
+
   if (app$can.change.code) {
     buttonHandler("showStorySetBtn", storyId = storyId,
       function(app=getApp(), ec=app$ec, storyId,...) {
@@ -194,7 +194,7 @@ coll.show.story.btn = function(app=getApp(), ec=app$ec, storyId,...) {
         } else {
           ec$stories[[storyId]] = new.es
           createAlert(session = app$session,"showStoryAlert",title = "Changes are applied.",style = "success")
-          
+
         }
       }
     )
@@ -218,19 +218,19 @@ coll.show.model.btn = function(app=getApp(), ec=app$ec, modelId,...) {
 
 exit.to.main = function(app=getApp(),ec = app$ec,...) {
   if (is.null(ec$collection)) return()
-  
+
   setUI("storiesBaseUI",ec$choose.ui)
- 
-  
+
+
 }
 
 compile.to.html = function(txt) {
   if (is.list(txt)) {
     return(lapply(txt,compile.to.html))
   }
-  
+
   if (is.null(txt)) return("")
-  
+
   restore.point("compile.to.html")
   Encoding(txt) = "UTF-8"
   html =  markdownToHTML(text=txt, fragment.only=TRUE, encoding="UTF-8")
