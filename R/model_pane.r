@@ -5,19 +5,19 @@ init.model.panes = function(em) {
   em$panes = lapply(em$panes, function(pane) {
     restore.point("inner.init.model.pae")
 
-    init.model.pane(em=em, pane=pane)
+    init.model.pane(pane=pane, em=em)
    })
   invisible(em$panes)
 }
 
 
 
-init.model.pane = function(em, pane,...) {
+init.model.pane = function(pane, curves=em$curves,em,...) {
   restore.point("init.model.pane")
 
   if (!is.null(pane$curve_names)) {
     curve_names = setdiff(pane$curve_names, names(pane$curves))
-    pane$curves = c(pane$curves, em$curves[pane$curve_names])
+    pane$curves = c(pane$curves, curves[pane$curve_names])
   }
   init.pane(pane,...)
 }
@@ -27,7 +27,7 @@ init.model.pane = function(em, pane,...) {
 plot.model.pane = function(em,pane.ind=1,pane=em$panes[[pane.ind]], geom.names=names(pane$geom), params = as.list(sim[sim.row,]), sim=em$sim, sim.row = 1, scen=em$scen,...) {
   restore.point("plot.pane")
 
-  #pane = init.model.pane(em,pane)
+  #pane = init.model.pane(pane=pane, em=em)
 
   axis = scen$axis
   pane$xrange = as.numeric(axis[[pane$xvar]])
