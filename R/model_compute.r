@@ -21,7 +21,7 @@ examples.simulate.model = function() {
   initEconModels()
   EM = getEM()
   em = load.model("Ger3Eq")
-  em = load.model("SimpleLabor3Eq")
+  em = load.model("NoCapNoDebt")
   check.model(em)
   options(warn=1)
   init.model(em)
@@ -30,6 +30,9 @@ examples.simulate.model = function() {
   cdf = em$cdf
   icdf = em$icdf
   sim = simulate.model(em,init.scen = FALSE)
+
+  dyplot(data = sim,xcol = "t",ycol = c("c"))
+  dyplot(data = sim,xcol = "t",ycol = c("pi"))
 
   names(em$panes)
 
@@ -806,7 +809,7 @@ make.init.compute.code = function(icdf=em$icdf,exo = names(em$init.exo), em=NULL
 }
 
 
-make.inner.compute.code = function(cdf,  var.names=em$var.names, par.names = em$par.names, em=NULL, all.implicit = FALSE, lag.as.start=FALSE, subst.li = var.par.mat.subst.li(var.names,par.names) ) {
+make.inner.compute.code = function(cdf=em$cdf,  var.names=em$var.names, par.names = em$par.names, em=NULL, all.implicit = FALSE, lag.as.start=FALSE, subst.li = var.par.mat.subst.li(var.names,par.names) ) {
   restore.point("make.inner.compute.code")
 
 

@@ -1,32 +1,13 @@
-check.story = function(file=NULL, es=NULL) {
-  restore.point("check.story")
-  
-  if (is.null(es))
-    es <- load.story(file = file)
-  
-  if (!is.null(file))
-    assert(es$storyId == str.left.of(basename(file),"."))
-  
-  if (!is.null(es$scenario)) {
-    assert(!is.null(es$scenario$T))
-    # shocks must be part of the scenario
-    assert(is.null(es$shocks))
-    # T must be part of the scenario$T
-    assert(is.null(es$T))
-  }
-  
-}
-
 
 check.model = function(em) {
   restore.point("check.model")
-  
+
   # all known symbols
   syms = c(names(em$vars),names(em$params), names(em$extraVars))
   li = lapply(em$scenarios, function(scen) names(scen$params))
   syms = unique(c(syms, unlist(li)))
   syms = c(syms, paste0("lag_",syms),paste0("lead_",syms),"t")
-  
+
   check.formula = function(obj,field="formula",name=get.name(obj),section="", allow=NULL) {
     if (length(field)>1) {
       code = paste0("obj", paste0("[['",field,"']]",collapse=""))
@@ -34,7 +15,7 @@ check.model = function(em) {
     } else {
       val = obj[[field]]
     }
-    
+
     if (length(val)==0) return(TRUE)
     vars = find.variables(parse.as.call(val))
     unknown = setdiff(vars,c(syms,allow))
@@ -44,7 +25,7 @@ check.model = function(em) {
       return(FALSE)
     }
   }
-  
+
   # check variables
   lapply(em$vars, check.formula, section="vars")
   lapply(em$vars, check.formula, section="vars", field=c("init","formula"))
@@ -53,10 +34,10 @@ check.model = function(em) {
   lapply(em$extraVars, check.formula, section="extraVars")
   lapply(em$panes, check.formula, section="panes", field="xmarker")
   lapply(em$panes, check.formula, section="panes", field="ymarker")
-  
+
   lapply(em$curves, function(cu) {
     check.formula(cu, section="curves", field="eq", allow=cu$xy)
   })
   invisible(TRUE)
-  
+
 }

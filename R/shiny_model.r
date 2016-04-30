@@ -1,5 +1,5 @@
 examples.shiny.model = function() {
-  set.restore.point.options(display.restore.point = TRUE)
+  set.restore.point.options(display.restore.point = !TRUE)
 
 
   # Model builder
@@ -7,9 +7,10 @@ examples.shiny.model = function() {
   em = load.model("ThreeEq")
 
   init.model(em)
-
-  options(warn = 1)
   res = testwise.init.model(em)
+  df = res$li$cluster.equations$clu.df
+  cat(deparse(df$eq))
+
   df = res$df
   vals = em$init.vals
 
@@ -20,7 +21,7 @@ examples.shiny.model = function() {
   sim = simulate.model(em)
 
   initEconModels()
-  mb = init.mb("ThreeEq")
+  mb = init.mb("NoCapNoDebt")
   app = eventsApp()
   app$mb = mb
 
@@ -49,6 +50,8 @@ examples.shiny.model = function() {
   )
 
 }
+
+
 
 init.mb = function(modelId, file=paste0(modelId,".yaml"), dir=getEM()$models.path) {
   restore.point("init.mb")

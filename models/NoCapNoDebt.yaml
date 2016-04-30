@@ -1,0 +1,58 @@
+modelId: NoCapNoDebt
+
+info:
+  descr: Simple macro model without real investments or debt
+
+params:
+  S:
+    descr: Savings. Are exogenous
+  Tax:
+    descr: Taxes. Are exogenous
+  alpha:
+    descr: determines size of price adjustments
+  beta:
+    descr: strength of adaptive inflation expectations
+
+vars:
+  M:
+    descr: owned money at the beginning of a period
+    formula: lag_S + lag_Income
+  P:
+    descr: price for one good
+    formula: lag_P * max(0.1,(1+alpha*lag_z + beta*lag_pi))
+  pi:
+    descr: inflation rate
+    formula: (P -lag_P) / lag_P
+  C:
+    descr: money spend on consumption
+    formula: M-Tax-S
+  c:
+    descr: real consumption
+    formula: C / P
+  z:
+    descr: excess demand over desired supply of 1
+    formula: c-1
+  Income:
+    formula: P*c
+
+
+scenarios:
+  base:
+    T: 100
+    init_mode: steady_state
+    init:
+      alpha: 0.2
+      beta: 0.1
+      M: 100
+      S: 10
+      Tax: 0
+      P: C
+      lag_pi: 0
+    axis:
+    shocks:
+      S_inc:
+        descr: Desired savings increase
+        effects:
+          S: 'S*1.5'
+        start: 3
+        duration: 100

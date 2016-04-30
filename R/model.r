@@ -1,15 +1,15 @@
 
 examples.model = function() {
-  setwd("D:/libraries/EconCurves/EconCurves")
+  setwd("D:/libraries/EconModels/EconModels")
   initEconModels()
   EM = getEM()
   em = load.model("ThreeEq")
-  em = load.model("ThreeEqFixedM")
-  em = load.model("IS_LM_PC")
-  em = load.model("AdaptivePricesRandom")
-  em = load.model("GreenParadox")
-  em = load.model("HongStein")
-  em = load.model("General3Eq")
+  #em = load.model("ThreeEqFixedM")
+  #em = load.model("IS_LM_PC")
+  #em = load.model("AdaptivePricesRandom")
+  #em = load.model("GreenParadox")
+  #em = load.model("HongStein")
+  #em = load.model("General3Eq")
 
   init.model(em)
   init.model.scen(em)
@@ -36,7 +36,7 @@ load.model = function(modelId, file=paste0(modelId,".yaml"), dir=getEM()$models.
   tt = load.struct(name="model",file = paste0(dir,"/",file),typeName = "model")
   em = as.environment(tt.object(tt,1))
   em$yaml = attr(tt,"yaml")
-  Encoding(em$yaml) <- "UTF-8"
+  #Encoding(em$yaml) <- "UTF-8"
 
   em
 }
